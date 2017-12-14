@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="EN">
+<head>
+  <meta charset="utf-8">
+  <title>Job Analysis</title>
+  <link rel="stylesheet" type="text/css" href="../../dc.css" />
+  <link rel="stylesheet" type="text/css" href="../../bootstrap.css" />
+  <style>
+    body, html {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+
+
+    div {
+      -webkit-box-sizing: border-box;
+      -moz-box-sizing: border-box;
+      box-sizing: border-box;
+    }
+
+    div.row {
+      display: block;
+      height: 50%;
+      width: 100%;
+
+
+    }
+
+    div.row1 {
+      display: block;
+      height: 60%;
+      width: 100%;
+
+
+    }
+
+    div.column {
+      width: 50%;
+      height: 100%;
+      display: block;
+      float: left;
+      vertical-align: middle;
+      #border:1px solid blue;
+      #border-left: 1px solid black;
+
+
+
+    }
+    div.container {
+      width: 50%;
+      height: 100%;
+      display: block;
+      float: left;
+      vertical-align: middle;
+      #border:1px solid blue;
+      #border-left: 1px solid black;
+    }
+    div.column4 {
+      width: 25%;
+      height: 100%;
+      display: block;
+      float: inherit;
+      vertical-align: middle;
+      #border:1px solid blue;
+      #border-left: 1px solid black;
+    }
+    div.column1 {
+      width: 100%;
+      height: 100%;
+      display: block;
+      #float:left;
+      vertical-align: middle;
+      #border:1px solid blue;
+      #border-left: 1px solid black;
+    }
+    td{
+      border:1px solid gainsboro;
+    }
+    h2{
+      align-items: center;
+      align-content: center;
+    }
+  </style>
+</head>
+<body>
+  <div style="text-align: center">
+    <h1>Job Analysis Dashboard</h1>
+    <h5>Project by Sai Nikhil Gundu, Ramesh Rajan, Megha Devrani</h5>
+  </div>
+
+  <div class="row1">
+    <div class="column" id="chart">
+      <h2>Number of jobs by Department          <a class="reset" style="display:none" href="javascript:pieChart.filterAll(); dc.redrawAll();">reset</a></h2>
+
+
+    </div>
+
+
+    <div class="column" id="map">
+      <h2>Jobs Across US <a class="reset" style="display:none" href="javascript:usChart.filterAll(); dc.redrawAll();">reset</a></h2>
+
+    </div>
+
+  </div>
+  <div class="row1">
+
+    <div class="column" id="chart1">
+      <h2>Jobs by Occupation Title <a class="reset" style="display:none" href="javascript:pieChart1.filterAll(); dc.redrawAll();">reset</a></h2>
+
+    </div>
+
+    <div class="column" id="chart2">
+      <h2>Top 15 occupations <a class="reset" style="display:none" href="javascript:pieChart1.filterAll(); dc.redrawAll();">reset</a></h2>
+
+    </div>
+
+
+  </div>
+
+  <br/><br/><br/><br/>
+  <div class="row1">
+
+    <div class="container" >
+      <h2>Top Paying occupations <a class="reset" style="display:none" href="javascript:pieChart.filterAll(); dc.redrawAll();">reset</a></h2>
+      <table id="table" class="table-hover"></table>
+    </div>
+
+    <div class="container" >
+      <h2>Low Paying occupations <a class="reset" style="display:none" href="javascript:pieChart.filterAll(); dc.redrawAll();">reset</a></h2>
+      <table id="table1" class="table-hover"></table>
+    </div>
+
+
+  </div>
+  <script type="text/javascript" src="../../d3.js"></script>
+  <script type="text/javascript" src="../../crossfilter.js"></script>
+  <script type="text/javascript" src="../../dc.js"></script>
+
+  <script type="text/javascript">
+
+  function print_filter(filter) {
+    var f=eval(filter);
+    if (typeof(f.length) != "undefined") {}else{}
+    if (typeof(f.top) != "undefined") {f=f.top(Infinity);}else{}
+    if (typeof(f.dimension) != "undefined") {f=f.dimension(function(d) { return "";}).top(Infinity);}else{}
+    console.log(filter+"("+f.length+") = "+JSON.stringify(f).replace("[","[\n\t").replace(/}\,/g,"},\n\t").replace("]","\n]"));
+  }
+
+  var usChart = dc.geoChoroplethChart("#map");
+
+  d3.csv("data_20151.csv",function (error1,data1) {
+
+      data1.forEach(function(d){
+          d.AREA=+d.AREA
+          d.TOT_EMP=+d.TOT_EMP
+          d.ST=d.ST
+          d.STATE=d.STATE
+          d.department=d.department
+          d.OCC_TITLE=d.OCC_TITLE
+          d.A_MEAN=  d.A_MEAN
+      })
+
+      var facts1 = crossfilter(data1);
+
+      var states1 = facts1.dimension(function(d){ return d.ST; });
+      var stateRaisedSum1 = states1.group().reduceSum(function(d){ return  d.TOT_EMP; });
+
+      var typeDimension = facts1.dimension(function(d){ return d.department; });
+      var typeGroup = typeDimension.group().reduceSum(function(d){ return d.TOT_EMP;});
+
+      var typeDimension1 = facts1.dimension(function(d){ return d.OCC_TITLE; });
+      var typeGroup1 = typeDimension1.group().reduceSum(function(d){ return d.TOT_EMP;});
+
+      var typeDimension2 = facts1.dimension(function(d){ return d.OCC_TITLE; });
+      var typeGroup2 = typeDimension1.group().reduceSum(function(d){ return d.TOT_EMP;});
+
+      var wageDimension = facts1.dimension(function(d){ return d.A_MEAN; });
+      var wageGroup = wageDimension.group().reduceSum(function(d){ return d.all;});
+
+      //console.log(wageGroup)
+      print_filter(wageGroup)
+
+       window.pieChart1 = dc.pieChart("#chart1")
+          .width(700)
+          .height(300)
+          .radius(120)
+          .innerRadius(50)
+          .renderLabel(false)
+          .title(function(d){ return d.key + ': '+d.value; })
+          .colors(d3.scale.category10())
+          .transitionDuration(1500)
+          .label(function(d){ return d.key})
+          // .margins({top:10,bottom:30,right:10,left:70})
+          .dimension(typeDimension1)
+          .group(typeGroup1)
+          .legend(dc.legend().x(1200).y(5).itemHeight(12).gap(5));
+      // .x(d3.time.scale().domain([minDate,maxDate]));
+      // .centerBar(true)
+      //.xUnits(dc.units.fp.precision(100));
+      // .barPadding(0.2)
+      // .outerPadding(0)
+      // lineChart.yAxis().ticks(5);
+      // lineChart.xAxis().ticks(4);
+
+
+
+      window.pieChart = dc.pieChart("#chart")
+          .width(700)
+          .height(300)
+          .radius(120)
+          .innerRadius(50)
+          .renderLabel(false)
+          .title(function(d){ return d.key + ': '+d.value; })
+          .colors(d3.scale.category10())
+          .transitionDuration(1500)
+          //.label(function(d){ return d.key})
+          // .margins({top:10,bottom:30,right:10,left:70})
+          .dimension(typeDimension)
+          .group(typeGroup)
+          .legend(dc.legend().x(5).y(5).itemHeight(10).gap(5));
+      // .x(d3.time.scale().domain([minDate,maxDate]));
+      // .centerBar(true)
+      //.xUnits(dc.units.fp.precision(100));
+          //.barPadding(0.2)
+          //.outerPadding(0);
+      // lineChart.yAxis().ticks(5);
+      // lineChart.xAxis().ticks(4);
+
+      function remove_empty_bins(source_group) {
+          return {
+              all:function () {
+                  return source_group.all().filter(function(d) {
+                      return d.value > 10000;
+                  });
+              }
+          };
+      }
+      var nonEmptyHist=remove_empty_bins(typeGroup2)
+
+      function getTops(source_group) {
+          return {
+              all: function () {
+                  return source_group.top(15);
+              }
+          };
+      }
+      var fakeGroup = getTops(typeGroup2);
+      var filtered_group = remove_empty_bins(fakeGroup);
+
+      var bchart=dc.barChart("#chart2")
+          .width(680)
+          .height(500)
+          .dimension(typeDimension2)
+          .group(filtered_group)
+          .x(d3.scale.category10())
+          .margins({ top: 10, left: 100, right: 10, bottom: 150 })
+          .xUnits(dc.units.ordinal)
+          .elasticX(true)
+          .elasticY(true)
+
+          .renderlet(function (chart) {chart.selectAll("g.x text").attr('dx', '130').attr('dy', '-5').style('fill','black')
+              .attr('transform', "rotate(-90)").attr("text-anchor", "start");})
+          //.renderlet(function(chart2) {
+           //   chart2.selectAll("rect")
+             //     .append("text")
+              //    .attr("text", function(d) { return d.value })
+          //})
+          .ordering(function(d) { return -d.value; })
+          .xUnits(dc.units.ordinal);
+
+      var dataTable = dc.dataTable("#table")
+          .width(680)
+          .height(200)
+          .dimension(wageDimension)
+          .showGroups(false)
+          .size(10)
+          .group(function(d){ return (d.A_MEAN); })
+          //.group(wageGroup)
+          .columns([
+              'STATE',
+              'OCC_TITLE',
+              'A_MEAN',
+              'A_MEDIAN'
+
+              ])
+          .order(d3.descending)
+          .sortBy(function(d){ return (d.A_MEAN); });
+
+
+      var dataTable1 = dc.dataTable("#table1")
+          .width(680)
+          .height(200)
+          .dimension(wageDimension)
+          .size(10)
+          .group(function(d){ return (d.A_MEAN); })
+          .showGroups(false)
+          //.group(wageGroup)
+          .columns([
+              'STATE',
+              'OCC_TITLE',
+              'A_MEAN',
+              'A_MEDIAN'
+          ])
+
+          .order(d3.ascending)
+          .sortBy(function(d){ return (d.A_MEAN); });
+
+      d3.json("us-states.json",function(error3,statesJson1){
+
+          var centre1 = d3.geo.centroid(statesJson1);
+          var projection1 = d3.geo.mercator().center(centre1).scale(500).translate([200,100]);
+
+          console.log(statesJson1)
+          usChart
+              .width(800)
+              .height(300)
+              .dimension(states1)
+              .projection(projection1)
+              .group(stateRaisedSum1)
+              //.label(function(d){ return states1})
+              .colors(['#ccc', '#E2F2FF','#C4E4FF','#9ED2FF','#81C5FF','#6BBAFF','#51AEFF','#36A2FF','#1E96FF','#0089FF',
+                  '#0061B5'])
+
+              .colorDomain([-5, 200])
+              .colorAccessor(function(d, i){return d.value;})
+              //.ordinalColors(["#E2F2FF", "#C4E4FF", "#9ED2FF", "#81C5FF", "#6BBAFF", "#51AEFF", "#36A2FF", "#1E96FF", "#0089FF", "#0061B5"])
+              //.colors(d3.scale.quantize().range(["#E2F2FF", "#C4E4FF", "#9ED2FF", "#81C5FF", "#6BBAFF", "#51AEFF", "#36A2FF", "#1E96FF", "#0089FF", "#0061B5"]))
+         // linear().range(["#f7fbff","#deebf7","#c6dbef","#9ecae1","#6baed6","#4292c6","#2171b5","#08519c","#08306b"]))
+
+              .colorDomain([0,200000])
+              .colorCalculator(function(d){ return d ? usChart.colors()(d) : '#dcd'; })
+              .overlayGeoJson(statesJson1.features,"ST",function(d){
+                  return d.properties.name;
+              });
+
+
+          dc.renderAll();
+
+
+      })
+
+  })
+
+
+
+  </script>
+
+</body>
+</html>
